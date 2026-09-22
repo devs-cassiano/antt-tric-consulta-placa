@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "build:static": "node -e \"const fs=require('fs'); if(!fs.existsSync('public/index.html')) process.exit(1); console.log('Static frontend ready in public/')\"",
-    "build:lambda": "esbuild src/lambda.ts --bundle --platform=node --target=node20 --outfile=dist-lambda/index.js --minify",
+    "build:lambda": "esbuild src/lambda.ts --bundle --platform=node --target=node22 --outfile=dist-lambda/index.js --minify",
     "package:lambda": "npm run build:lambda && mkdir -p dist-lambda && cd dist-lambda && zip -FS ../lambda.zip index.js",
     "start": "node dist/server.js",
     "consulta": "tsx src/cli.ts"

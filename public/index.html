@@ -2,14 +2,30 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
+    />
     <!--
       API_BASE_URL: vazio = mesmo domínio (Amplify rewrite /api → Lambda).
       Prioridade: window.__ANTT_TRIC_CONFIG__.apiBaseUrl (config.js)
       → esta meta tag → localhost:3000 se a UI estiver noutro porto → origem relativa.
     -->
     <meta name="api-base-url" content="" />
+    <meta name="theme-color" content="#1e3a8a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ANTT TRIC" />
+    <meta
+      name="description"
+      content="Consulta de veículos e licenças habilitados ao Transporte Rodoviário Internacional de Cargas (TRIC/ANTT)."
+    />
     <title>Consulta de Veículos - TRIC (ANTT)</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -34,35 +50,50 @@
         --muted: #5a6e7f;
         --primary: #4a7c8c;
         --primary-hover: #386170;
+        --theme: #1e3a8a;
         --success: #2e6b4d;
         --danger: #9b2c2c;
         --border: #d2dce4;
         --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         --radius-card: 12px;
         --radius-btn: 8px;
+        --touch-min: 2.75rem;
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-left: env(safe-area-inset-left, 0px);
+        --safe-right: env(safe-area-inset-right, 0px);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
+        min-height: 100dvh;
         font-family: var(--font-sans);
+        font-size: clamp(0.94rem, 0.9rem + 0.2vw, 1rem);
         color: var(--text);
         background: var(--bg-page);
         -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        padding-bottom: var(--safe-bottom);
       }
 
       .app {
-        width: min(960px, calc(100% - 2rem));
+        width: min(960px, calc(100% - 1.25rem));
         margin: 0 auto;
-        padding: 1.75rem 0 3rem;
+        padding: calc(1.1rem + var(--safe-top)) max(0.25rem, var(--safe-right))
+          calc(2.5rem + var(--safe-bottom)) max(0.25rem, var(--safe-left));
       }
 
       .top-bar {
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
       }
 
       .btn {
@@ -74,14 +105,15 @@
         border: 1px solid transparent;
         border-radius: var(--radius-btn);
         font-family: inherit;
-        font-size: 0.9rem;
+        font-size: clamp(0.88rem, 0.85rem + 0.2vw, 0.95rem);
         font-weight: 600;
         line-height: 1.2;
         cursor: pointer;
         transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-        min-height: 2.5rem;
-        padding: 0.6rem 1rem;
+        min-height: var(--touch-min);
+        padding: 0.65rem 1rem;
         text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .btn:disabled {
@@ -112,8 +144,8 @@
         background: transparent;
         color: var(--muted);
         border: 0;
-        padding: 0.35rem 0.15rem;
-        min-height: auto;
+        padding: 0.45rem 0.15rem;
+        min-height: 2.5rem;
         font-weight: 500;
         font-size: 0.875rem;
       }
@@ -124,22 +156,24 @@
       }
 
       .page-header {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.1rem;
       }
 
       .page-header h1 {
-        margin: 0 0 0.35rem;
-        font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+        margin: 0 0 0.4rem;
+        font-size: clamp(1.2rem, 1rem + 1.4vw, 1.65rem);
         font-weight: 700;
         color: var(--title);
         letter-spacing: -0.02em;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
       }
 
       .page-header p {
         margin: 0;
         color: var(--muted);
-        font-size: 0.95rem;
-        line-height: 1.5;
+        font-size: clamp(0.88rem, 0.85rem + 0.25vw, 0.98rem);
+        line-height: 1.55;
         max-width: 40rem;
       }
 
@@ -148,13 +182,13 @@
         border: 1px solid rgba(210, 220, 228, 0.8);
         border-radius: var(--radius-card);
         box-shadow: var(--shadow);
-        padding: 1.25rem 1.35rem;
+        padding: clamp(1rem, 0.9rem + 0.4vw, 1.35rem);
         margin-bottom: 1rem;
       }
 
       .card h2 {
         margin: 0 0 1rem;
-        font-size: 1rem;
+        font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.05rem);
         font-weight: 700;
         color: var(--title);
       }
@@ -188,31 +222,72 @@
         color: var(--muted);
       }
 
+      .input-wrap {
+        position: relative;
+        display: block;
+      }
+
       .field input {
         width: 100%;
-        min-height: 2.75rem;
-        padding: 0.7rem 0.9rem;
+        min-height: var(--touch-min);
+        padding: 0.7rem 2.75rem 0.7rem 0.9rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-btn);
         background: #fff;
         color: var(--title);
-        font: 600 0.95rem/1.2 var(--font-sans);
+        font: 600 clamp(0.95rem, 0.9rem + 0.3vw, 1.05rem) / 1.2 var(--font-sans);
         letter-spacing: 0.04em;
         text-transform: uppercase;
         outline: none;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
-      .field input::placeholder {
-        color: #9aabba;
-        font-weight: 500;
-        letter-spacing: 0;
-        text-transform: none;
-      }
-
       .field input:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(74, 124, 140, 0.15);
+      }
+
+      .btn-clear-placa {
+        position: absolute;
+        top: 50%;
+        right: 0.4rem;
+        transform: translateY(-50%);
+        width: 2.4rem;
+        height: 2.4rem;
+        padding: 0;
+        min-height: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease, color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .btn-clear-placa.visible {
+        display: inline-flex;
+      }
+
+      .btn-clear-placa:hover {
+        background: var(--bg-neutral-btn);
+        color: var(--title);
+      }
+
+      .btn-clear-placa:focus-visible {
+        outline: 2px solid rgba(74, 124, 140, 0.45);
+        outline-offset: 1px;
+      }
+
+      .btn-clear-placa-mobile {
+        display: none;
+        width: 100%;
       }
 
       .status {
@@ -241,6 +316,7 @@
         margin-top: 1rem;
         font-size: 0.9rem;
         line-height: 1.45;
+        overflow-wrap: anywhere;
       }
 
       .notice.visible {
@@ -266,7 +342,7 @@
         border: 1px solid rgba(155, 44, 44, 0.18);
         border-radius: var(--radius-card);
         box-shadow: var(--shadow);
-        padding: 1.5rem 1.35rem 1.35rem;
+        padding: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
         text-align: center;
       }
 
@@ -288,17 +364,18 @@
 
       .not-found-card h2 {
         margin: 0 0 0.4rem;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 0.95rem + 0.4vw, 1.15rem);
         font-weight: 700;
         color: var(--danger);
       }
 
       .not-found-card .placa-destaque {
         margin: 0.35rem 0 0.75rem;
-        font-size: 1.05rem;
+        font-size: clamp(1rem, 0.95rem + 0.5vw, 1.15rem);
         font-weight: 700;
         color: var(--title);
         letter-spacing: 0.06em;
+        overflow-wrap: anywhere;
       }
 
       .not-found-card p {
@@ -307,6 +384,7 @@
         color: var(--text);
         font-size: 0.92rem;
         line-height: 1.5;
+        overflow-wrap: anywhere;
       }
 
       .not-found-card .actions {
@@ -352,7 +430,7 @@
 
       .kv-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
         gap: 0.85rem 1.25rem;
       }
 
@@ -371,6 +449,7 @@
         font-weight: 500;
         color: var(--text);
         word-break: break-word;
+        overflow-wrap: anywhere;
         line-height: 1.35;
       }
 
@@ -385,8 +464,18 @@
         grid-column: 1 / -1;
       }
 
+      .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        margin: 0 -0.15rem;
+        padding: 0 0.15rem;
+      }
+
       .licenses-table {
         width: 100%;
+        min-width: 320px;
         border-collapse: collapse;
         font-size: 0.9rem;
       }
@@ -405,6 +494,7 @@
         border-bottom: 1px solid var(--border);
         color: var(--text);
         vertical-align: middle;
+        word-break: break-word;
       }
 
       .licenses-table tr:last-child td {
@@ -414,12 +504,15 @@
       .badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.25rem 0.6rem;
+        padding: 0.28rem 0.6rem;
         border-radius: 999px;
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.02em;
         text-transform: uppercase;
+        max-width: 100%;
+        white-space: normal;
+        text-align: left;
       }
 
       .badge-ok {
@@ -468,6 +561,7 @@
         justify-content: space-between;
         gap: 0.75rem;
         padding: 0.9rem 1.1rem;
+        min-height: var(--touch-min);
         font-size: 0.9rem;
         font-weight: 600;
         color: var(--title);
@@ -505,9 +599,10 @@
         border-radius: var(--radius-btn);
         background: #0f2942;
         color: #e8eef3;
-        font: 400 0.8rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font: 400 0.75rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         overflow: auto;
         max-height: min(45vh, 420px);
+        -webkit-overflow-scrolling: touch;
       }
 
       .key {
@@ -528,8 +623,10 @@
 
       .footer {
         margin-top: 1.25rem;
+        margin-bottom: calc(0.5rem + var(--safe-bottom));
         font-size: 0.8rem;
         color: var(--muted);
+        overflow-wrap: anywhere;
       }
 
       .footer a {
@@ -541,17 +638,72 @@
         text-decoration: underline;
       }
 
-      @media (max-width: 720px) {
+      .install-banner {
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        margin: 0 0 1rem;
+        padding: 0.85rem 0.95rem;
+        border-radius: var(--radius-card);
+        background: #eef2ff;
+        border: 1px solid rgba(30, 58, 138, 0.18);
+        color: var(--theme);
+        box-shadow: var(--shadow);
+      }
+
+      .install-banner.visible {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+      }
+
+      .install-banner p {
+        margin: 0;
+        flex: 1 1 12rem;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        color: var(--title);
+      }
+
+      .install-banner .install-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .install-banner .btn-install {
+        background: var(--theme);
+        color: #fff;
+        min-height: 2.6rem;
+      }
+
+      .install-banner .btn-install:hover:not(:disabled) {
+        background: #172554;
+      }
+
+      @media (max-width: 640px) {
         .app {
-          padding-top: 1.25rem;
+          width: min(960px, calc(100% - 1rem));
+          padding-top: calc(0.85rem + var(--safe-top));
         }
 
         .search-form {
           grid-template-columns: 1fr;
         }
 
-        .search-form .btn-primary {
+        .search-form .btn-primary,
+        .btn-clear-placa-mobile.visible {
+          display: inline-flex;
           width: 100%;
+          min-height: 3rem;
+        }
+
+        .btn-clear-placa {
+          width: 2.75rem;
+          height: 2.75rem;
         }
 
         .kv-grid {
@@ -562,18 +714,84 @@
           grid-column: auto;
         }
 
-        .actions-panel .btn {
-          flex: 1 1 auto;
+        .actions-panel {
+          flex-direction: column;
         }
 
+        .actions-panel .btn,
         .not-found-card .actions .btn {
           width: 100%;
+          min-height: 3rem;
+        }
+
+        .json-panel summary {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        /* Licenças: cards empilhados em mobile */
+        .licenses-table {
+          min-width: 0;
+        }
+
+        .licenses-table thead {
+          display: none;
+        }
+
+        .licenses-table,
+        .licenses-table tbody,
+        .licenses-table tr,
+        .licenses-table td {
+          display: block;
+          width: 100%;
+        }
+
+        .licenses-table tr {
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 0.75rem 0.85rem;
+          margin-bottom: 0.65rem;
+          background: #fbfcfd;
+        }
+
+        .licenses-table td {
+          border: 0;
+          padding: 0.35rem 0;
+        }
+
+        .licenses-table td::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          margin-bottom: 0.15rem;
+        }
+
+        .table-scroll {
+          overflow: visible;
+        }
+      }
+
+      @media (min-width: 641px) {
+        .btn-clear-placa-mobile {
+          display: none !important;
         }
       }
     </style>
   </head>
   <body>
     <div class="app">
+      <div id="installBanner" class="install-banner" role="region" aria-label="Instalar aplicativo">
+        <p>Instale o <strong>ANTT TRIC</strong> na tela inicial para consultar placas com acesso rápido.</p>
+        <div class="install-actions">
+          <button type="button" class="btn btn-install" id="btnInstallApp">Instalar app</button>
+          <button type="button" class="btn btn-neutral" id="btnDismissInstall">Agora não</button>
+        </div>
+      </div>
+
       <div class="top-bar">
         <button type="button" class="btn btn-back" id="btnNovaConsulta">← Nova Consulta</button>
       </div>
@@ -590,16 +808,36 @@
         <form id="form" class="search-form" autocomplete="off">
           <div class="field">
             <label for="placa">Matrícula / Placa</label>
-            <input
-              id="placa"
-              name="placa"
-              type="text"
-              maxlength="9"
-              placeholder="ex: ABBK034"
-              required
-              autofocus
-            />
+            <div class="input-wrap">
+              <input
+                id="placa"
+                name="placa"
+                type="text"
+                maxlength="9"
+                required
+                autofocus
+                autocomplete="off"
+                aria-label="Matrícula ou placa do veículo"
+              />
+              <button
+                type="button"
+                class="btn-clear-placa"
+                id="btnClearPlaca"
+                aria-label="Limpar placa"
+                title="Limpar"
+              >
+                ✕
+              </button>
+            </div>
           </div>
+          <button
+            type="button"
+            class="btn btn-neutral btn-clear-placa-mobile"
+            id="btnClearPlacaMobile"
+            aria-label="Limpar placa"
+          >
+            Limpar
+          </button>
           <button id="submit" class="btn btn-primary" type="submit">Consultar Veículo</button>
         </form>
         <div id="status" class="status" role="status" aria-live="polite"></div>
@@ -729,10 +967,16 @@
       const btnNovaConsulta = document.getElementById("btnNovaConsulta");
       const btnPdf = document.getElementById("btnPdf");
       const btnComprovante = document.getElementById("btnComprovante");
+      const btnClearPlaca = document.getElementById("btnClearPlaca");
+      const btnClearPlacaMobile = document.getElementById("btnClearPlacaMobile");
+      const installBanner = document.getElementById("installBanner");
+      const btnInstallApp = document.getElementById("btnInstallApp");
+      const btnDismissInstall = document.getElementById("btnDismissInstall");
 
       let lastData = null;
       let lastJson = "";
       let lastNotFound = null;
+      let deferredInstallPrompt = null;
 
       function setStatus(message, type) {
         statusEl.textContent = message || "";
@@ -743,10 +987,39 @@
         setStatus("");
       }
 
+      function syncClearPlacaButton() {
+        const hasText = placaInput.value.trim().length > 0;
+        btnClearPlaca.classList.toggle("visible", hasText);
+        btnClearPlaca.disabled = !hasText;
+        btnClearPlacaMobile.classList.toggle("visible", hasText);
+        btnClearPlacaMobile.disabled = !hasText;
+      }
+
       function hideNegativeResult() {
         emptyStateEl.classList.remove("visible");
         btnComprovante.disabled = true;
         lastNotFound = null;
+      }
+
+      function limparResultadosConsulta() {
+        resultEl.classList.remove("visible");
+        hideNegativeResult();
+        successNoticeEl.classList.remove("visible");
+        successNoticeEl.innerHTML = "";
+        dashboardEl.innerHTML = "";
+        lastData = null;
+        lastJson = "";
+        jsonPanelEl.open = false;
+        syncJsonToggleLabel();
+        btnPdf.disabled = true;
+        clearLocalStatus();
+      }
+
+      function limparCampoPlaca() {
+        placaInput.value = "";
+        limparResultadosConsulta();
+        syncClearPlacaButton();
+        placaInput.focus();
       }
 
       function isNaoCadastradoMessage(mensagem) {
@@ -770,10 +1043,16 @@
 
       placaInput.addEventListener("input", () => {
         placaInput.value = placaInput.value.replace(/[^a-zA-Z0-9.]/g, "").toUpperCase();
+        syncClearPlacaButton();
         clearLocalStatus();
         hideNegativeResult();
         successNoticeEl.classList.remove("visible");
         successNoticeEl.innerHTML = "";
+        resultEl.classList.remove("visible");
+        dashboardEl.innerHTML = "";
+        lastData = null;
+        lastJson = "";
+        btnPdf.disabled = true;
       });
 
       function escapeHtml(text) {
@@ -897,14 +1176,14 @@
             '<p class="muted-text">Nenhuma licença retornada para este veículo.</p>';
         } else {
           licensesHtml =
-            '<table class="licenses-table"><thead><tr><th>De / Para</th><th>Tráfego</th></tr></thead><tbody>' +
+            '<div class="table-scroll"><table class="licenses-table"><thead><tr><th>De / Para</th><th>Tráfego</th></tr></thead><tbody>' +
             licencas
               .map((item) => {
                 const badge = classifyTrafego(item.trafego);
                 return (
-                  "<tr><td>" +
+                  "<tr><td data-label=\"De / Para\">" +
                   escapeHtml(displayValue(item.de_para)) +
-                  '</td><td><span class="badge ' +
+                  '</td><td data-label="Tráfego"><span class="badge ' +
                   badge.cls +
                   '">' +
                   escapeHtml(displayValue(badge.label)) +
@@ -912,7 +1191,7 @@
                 );
               })
               .join("") +
-            "</tbody></table>";
+            "</tbody></table></div>";
         }
 
         dashboardEl.innerHTML =
@@ -949,6 +1228,7 @@
           " carregados com sucesso.";
         successNoticeEl.classList.add("visible");
         resultEl.classList.add("visible");
+        btnPdf.disabled = false;
       }
 
       async function copiarJson() {
@@ -1186,18 +1466,7 @@
       }
 
       function resetConsulta() {
-        resultEl.classList.remove("visible");
-        hideNegativeResult();
-        successNoticeEl.classList.remove("visible");
-        successNoticeEl.innerHTML = "";
-        dashboardEl.innerHTML = "";
-        lastData = null;
-        lastJson = "";
-        jsonPanelEl.open = false;
-        syncJsonToggleLabel();
-        clearLocalStatus();
-        placaInput.value = "";
-        placaInput.focus();
+        limparCampoPlaca();
       }
 
       form.addEventListener("submit", async (event) => {
@@ -1212,13 +1481,8 @@
         }
 
         submitBtn.disabled = true;
-        resultEl.classList.remove("visible");
-        hideNegativeResult();
-        successNoticeEl.classList.remove("visible");
-        dashboardEl.innerHTML = "";
-        lastData = null;
-        lastJson = "";
-        clearLocalStatus();
+        limparResultadosConsulta();
+        syncClearPlacaButton();
 
         try {
           const response = await fetch(apiUrl("/api/consulta/" + encodeURIComponent(placa)));
@@ -1241,6 +1505,7 @@
           emptyStateEl.classList.add("visible");
           btnComprovante.disabled = true;
           lastNotFound = null;
+          btnPdf.disabled = true;
         } finally {
           submitBtn.disabled = false;
         }
@@ -1259,12 +1524,55 @@
       btnComprovante.addEventListener("click", gerarComprovanteNaoLocalizadoPdf);
       btnCopy.addEventListener("click", copiarJson);
       btnNovaConsulta.addEventListener("click", resetConsulta);
+      btnClearPlaca.addEventListener("click", limparCampoPlaca);
+      btnClearPlacaMobile.addEventListener("click", limparCampoPlaca);
+
+      btnPdf.disabled = true;
+      syncClearPlacaButton();
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        if (localStorage.getItem("antt-tric-install-dismissed") === "1") return;
+        installBanner.classList.add("visible");
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        installBanner.classList.remove("visible");
+      });
+
+      btnInstallApp.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        try {
+          await deferredInstallPrompt.userChoice;
+        } catch (_) {
+          /* ignore */
+        }
+        deferredInstallPrompt = null;
+        installBanner.classList.remove("visible");
+      });
+
+      btnDismissInstall.addEventListener("click", () => {
+        installBanner.classList.remove("visible");
+        localStorage.setItem("antt-tric-install-dismissed", "1");
+      });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch((err) => {
+            console.error("Falha ao registrar Service Worker:", err);
+          });
+        });
+      }
 
       window.renderResultados = renderResultados;
       window.toggleJsonView = toggleJsonView;
       window.copiarJson = copiarJson;
       window.gerarPdf = gerarPdf;
       window.gerarComprovanteNaoLocalizadoPdf = gerarComprovanteNaoLocalizadoPdf;
+      window.limparCampoPlaca = limparCampoPlaca;
     </script>
   </body>
 </html>
