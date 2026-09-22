@@ -1,0 +1,21 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Frontend estático em public/ — sem dependências de build"
+    build:
+      commands:
+        - echo "Publicando artefatos estáticos do diretório public/"
+        - test -f public/index.html
+  artifacts:
+    # index.html e restantes ficheiros estáticos são servidos na raiz do domínio
+    baseDirectory: public
+    files:
+      - "**/*"
+  cache:
+    paths: []
+  # Rewrites SPA: também configure no Amplify Console → Hosting → Rewrites and redirects
+  # Source: </^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|html)$)([^.]+$)/>
+  # Target: /index.html
+  # Type: 200 (Rewrite)

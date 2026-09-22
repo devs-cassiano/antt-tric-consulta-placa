@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      API_BASE_URL: URL do backend Express/API em produção (Amplify não corre Node).
+      Prioridade de resolução: window.__ANTT_TRIC_CONFIG__.apiBaseUrl (config.js)
+      → esta meta tag → localhost:3000 em ambiente local → origem relativa.
+    -->
+    <meta name="api-base-url" content="" />
     <title>Consulta de Veículos - TRIC (ANTT)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,6 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script src="./config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -557,6 +564,39 @@
     </div>
 
     <script>
+      /**
+       * Base URL da API.
+       * - Local (Express): "" → fetch relativo /api/...
+       * - Amplify / produção: definir em ./config.js ou na meta[name=api-base-url]
+       */
+      const API_BASE_URL = (function resolveApiBaseUrl() {
+        const fromConfig = window.__ANTT_TRIC_CONFIG__ && window.__ANTT_TRIC_CONFIG__.apiBaseUrl;
+        if (typeof fromConfig === "string" && fromConfig.trim()) {
+          return fromConfig.trim().replace(/\/$/, "");
+        }
+
+        const meta = document.querySelector('meta[name="api-base-url"]');
+        if (meta && meta.content && meta.content.trim()) {
+          return meta.content.trim().replace(/\/$/, "");
+        }
+
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") {
+          // Se a UI for aberta como ficheiro ou noutro porto, aponta para o Express.
+          if (window.location.port && window.location.port !== "3000") {
+            return "http://localhost:3000";
+          }
+          return "";
+        }
+
+        return "";
+      })();
+
+      function apiUrl(path) {
+        const normalized = path.startsWith("/") ? path : "/" + path;
+        return API_BASE_URL ? API_BASE_URL + normalized : normalized;
+      }
+
       const form = document.getElementById("form");
       const placaInput = document.getElementById("placa");
       const submitBtn = document.getElementById("submit");
@@ -910,13 +950,22 @@
         setStatus("Consultando ANTT…");
 
         try {
-          const response = await fetch("/api/consulta/" + encodeURIComponent(placa));
+          const response = await fetch(apiUrl("/api/consulta/" + encodeURIComponent(placa)));
+          if (!response.ok && response.status === 404 && !API_BASE_URL) {
+            throw new Error(
+              "API indisponível neste host. No Amplify, defina apiBaseUrl em config.js apontando para o backend."
+            );
+          }
           const data = await response.json();
           renderResultados(data);
         } catch (error) {
-          setStatus("Falha ao consultar a API local.", "error");
+          const detail =
+            error && error.message
+              ? error.message
+              : "Não foi possível concluir a operação. Verifique a API_BASE_URL / config.js e se o backend está acessível.";
+          setStatus("Falha ao consultar a API.", "error");
           emptyStateEl.innerHTML =
-            "<strong>Falha na consulta</strong>Não foi possível concluir a operação. Verifique se o servidor está em execução e tente novamente.";
+            "<strong>Falha na consulta</strong>" + escapeHtml(detail);
           emptyStateEl.classList.add("visible");
         } finally {
           submitBtn.disabled = false;

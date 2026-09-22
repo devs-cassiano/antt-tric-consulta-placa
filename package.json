@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "build:static": "node -e \"const fs=require('fs'); if(!fs.existsSync('public/index.html')) process.exit(1); console.log('Static frontend ready in public/')\"",
     "start": "node dist/server.js",
     "consulta": "tsx src/cli.ts"
   },
