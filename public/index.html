@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta de Veículos - TRIC (ANTT)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+      :root {
+        --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --bg-page: #f4f7f9;
+        --bg-card: #ffffff;
+        --bg-soft: #eaf0f5;
+        --bg-neutral-btn: #e8eef3;
+        --bg-success: #e6f4ea;
+        --bg-danger: #fdecee;
+        --title: #13324b;
+        --text: #244b67;
+        --muted: #5a6e7f;
+        --primary: #4a7c8c;
+        --primary-hover: #386170;
+        --success: #2e6b4d;
+        --danger: #9b2c2c;
+        --border: #d2dce4;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        --radius-card: 12px;
+        --radius-btn: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        color: var(--text);
+        background: var(--bg-page);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .app {
+        width: min(960px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.75rem 0 3rem;
+      }
+
+      .top-bar {
+        margin-bottom: 1rem;
+      }
+
+      .btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-btn);
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        min-height: 2.5rem;
+        padding: 0.6rem 1rem;
+        text-decoration: none;
+      }
+
+      .btn:disabled {
+        opacity: 0.65;
+        cursor: wait;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-hover);
+      }
+
+      .btn-neutral {
+        background: var(--bg-neutral-btn);
+        color: var(--text);
+        border-color: #d7e1ea;
+      }
+
+      .btn-neutral:hover:not(:disabled) {
+        background: #dde6ee;
+      }
+
+      .btn-back {
+        background: transparent;
+        color: var(--muted);
+        border: 0;
+        padding: 0.35rem 0.15rem;
+        min-height: auto;
+        font-weight: 500;
+        font-size: 0.875rem;
+      }
+
+      .btn-back:hover:not(:disabled) {
+        color: var(--title);
+        background: transparent;
+      }
+
+      .page-header {
+        margin-bottom: 1.25rem;
+      }
+
+      .page-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+        font-weight: 700;
+        color: var(--title);
+        letter-spacing: -0.02em;
+      }
+
+      .page-header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        max-width: 40rem;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border: 1px solid rgba(210, 220, 228, 0.8);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow);
+        padding: 1.25rem 1.35rem;
+        margin-bottom: 1rem;
+      }
+
+      .card h2 {
+        margin: 0 0 1rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--title);
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-head h2 {
+        margin: 0;
+      }
+
+      .search-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .field input {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-btn);
+        background: #fff;
+        color: var(--title);
+        font: 600 0.95rem/1.2 var(--font-sans);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .field input::placeholder {
+        color: #9aabba;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .field input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(74, 124, 140, 0.15);
+      }
+
+      .status {
+        margin-top: 0.9rem;
+        min-height: 1.25rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+
+      .status.ok {
+        color: var(--success);
+      }
+
+      .status.error {
+        color: var(--danger);
+      }
+
+      .notice {
+        display: none;
+        border-radius: var(--radius-btn);
+        padding: 0.95rem 1rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .notice.visible {
+        display: block;
+      }
+
+      .notice-success {
+        background: var(--bg-success);
+        color: var(--success);
+        border: 1px solid rgba(46, 107, 77, 0.18);
+      }
+
+      .notice-error {
+        background: var(--bg-danger);
+        color: var(--danger);
+        border: 1px solid rgba(155, 44, 44, 0.15);
+      }
+
+      .notice strong {
+        display: block;
+        margin-bottom: 0.2rem;
+        font-weight: 700;
+      }
+
+      .results {
+        display: none;
+      }
+
+      .results.visible {
+        display: block;
+      }
+
+      .actions-panel {
+        background: var(--bg-soft);
+        border: 1px solid rgba(210, 220, 228, 0.9);
+        border-radius: var(--radius-card);
+        padding: 0.9rem 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .kv-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem 1.25rem;
+      }
+
+      .kv .k {
+        display: block;
+        margin-bottom: 0.2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.01em;
+      }
+
+      .kv .v {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text);
+        word-break: break-word;
+        line-height: 1.35;
+      }
+
+      .kv .v.highlight {
+        font-weight: 700;
+        color: var(--title);
+        font-size: 1.05rem;
+        letter-spacing: 0.04em;
+      }
+
+      .kv.span-2 {
+        grid-column: 1 / -1;
+      }
+
+      .licenses-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      .licenses-table th {
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 0.35rem 0.5rem 0.65rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .licenses-table td {
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: middle;
+      }
+
+      .licenses-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .badge-ok {
+        background: var(--bg-success);
+        color: var(--success);
+        border: 1px solid rgba(46, 107, 77, 0.18);
+      }
+
+      .badge-deny {
+        background: var(--bg-danger);
+        color: var(--danger);
+        border: 1px solid rgba(155, 44, 44, 0.15);
+      }
+
+      .badge-neutral {
+        background: var(--bg-soft);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      .badge-warn {
+        background: #fff6e8;
+        color: #8a5a12;
+        border: 1px solid rgba(138, 90, 18, 0.18);
+      }
+
+      .muted-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .json-panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        background: var(--bg-card);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .json-panel summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.9rem 1.1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--title);
+        user-select: none;
+        background: var(--bg-soft);
+      }
+
+      .json-panel summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .json-panel summary .hint {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .json-panel[open] summary {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .json-body {
+        padding: 0.9rem 1rem 1.05rem;
+      }
+
+      .json-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.55rem;
+      }
+
+      pre {
+        margin: 0;
+        padding: 0.95rem 1rem;
+        border-radius: var(--radius-btn);
+        background: #0f2942;
+        color: #e8eef3;
+        font: 400 0.8rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        overflow: auto;
+        max-height: min(45vh, 420px);
+      }
+
+      .key {
+        color: #8ec5d4;
+      }
+
+      .str {
+        color: #f0d39a;
+      }
+
+      .bool {
+        color: #9ec5ff;
+      }
+
+      .null {
+        color: #9aabba;
+      }
+
+      .footer {
+        margin-top: 1.25rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .footer a {
+        color: var(--primary);
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 720px) {
+        .app {
+          padding-top: 1.25rem;
+        }
+
+        .search-form {
+          grid-template-columns: 1fr;
+        }
+
+        .search-form .btn-primary {
+          width: 100%;
+        }
+
+        .kv-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .kv.span-2 {
+          grid-column: auto;
+        }
+
+        .actions-panel .btn {
+          flex: 1 1 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="top-bar">
+        <button type="button" class="btn btn-back" id="btnNovaConsulta">← Nova Consulta</button>
+      </div>
+
+      <header class="page-header">
+        <h1>Consulta de Veículos - TRIC (ANTT)</h1>
+        <p>
+          Consulte veículos nacionais e estrangeiros habilitados pela ANTT ao Transporte Rodoviário
+          Internacional de Cargas.
+        </p>
+      </header>
+
+      <section class="card" id="searchCard">
+        <form id="form" class="search-form" autocomplete="off">
+          <div class="field">
+            <label for="placa">Matrícula / Placa</label>
+            <input
+              id="placa"
+              name="placa"
+              type="text"
+              maxlength="9"
+              placeholder="ex: ABBK034"
+              required
+              autofocus
+            />
+          </div>
+          <button id="submit" class="btn btn-primary" type="submit">Consultar Veículo</button>
+        </form>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div id="emptyState" class="notice notice-error"></div>
+        <div id="successNotice" class="notice notice-success"></div>
+      </section>
+
+      <div id="result" class="results">
+        <div class="actions-panel">
+          <button type="button" class="btn btn-primary" id="btnPdf">Baixar Relatório em PDF</button>
+          <button type="button" class="btn btn-neutral" id="btnToggleJson">Ver JSON</button>
+        </div>
+
+        <div id="dashboard"></div>
+
+        <details class="json-panel" id="jsonPanel">
+          <summary>
+            <span id="jsonToggleLabel">Ver JSON</span>
+            <span class="hint">resposta bruta da API</span>
+          </summary>
+          <div class="json-body">
+            <div class="json-toolbar">
+              <button type="button" class="btn btn-neutral" id="btnCopy">Copiar JSON</button>
+            </div>
+            <pre id="json"><code></code></pre>
+          </div>
+        </details>
+      </div>
+
+      <footer class="footer">
+        Fonte oficial:
+        <a href="https://scff.antt.gov.br/conPlaca.asp" target="_blank" rel="noopener"
+          >scff.antt.gov.br/conPlaca.asp</a
+        >
+      </footer>
+    </div>
+
+    <script>
+      const form = document.getElementById("form");
+      const placaInput = document.getElementById("placa");
+      const submitBtn = document.getElementById("submit");
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+      const emptyStateEl = document.getElementById("emptyState");
+      const successNoticeEl = document.getElementById("successNotice");
+      const dashboardEl = document.getElementById("dashboard");
+      const jsonEl = document.getElementById("json");
+      const jsonPanelEl = document.getElementById("jsonPanel");
+      const jsonToggleLabelEl = document.getElementById("jsonToggleLabel");
+      const btnCopy = document.getElementById("btnCopy");
+      const btnToggleJson = document.getElementById("btnToggleJson");
+      const btnNovaConsulta = document.getElementById("btnNovaConsulta");
+      const btnPdf = document.getElementById("btnPdf");
+
+      let lastData = null;
+      let lastJson = "";
+
+      placaInput.addEventListener("input", () => {
+        placaInput.value = placaInput.value.replace(/[^a-zA-Z0-9.]/g, "").toUpperCase();
+      });
+
+      function setStatus(message, type) {
+        statusEl.textContent = message || "";
+        statusEl.className = "status" + (type ? " " + type : "");
+      }
+
+      function escapeHtml(text) {
+        return String(text ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function displayValue(value) {
+        const text = String(value ?? "").trim();
+        return text || "—";
+      }
+
+      function syntaxHighlight(json) {
+        const escaped = escapeHtml(json);
+        return escaped.replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (match) => {
+            let cls = "str";
+            if (/^"/.test(match)) {
+              cls = /:$/.test(match) ? "key" : "str";
+            } else if (/true|false/.test(match)) {
+              cls = "bool";
+            } else if (/null/.test(match)) {
+              cls = "null";
+            }
+            return '<span class="' + cls + '">' + match + "</span>";
+          }
+        );
+      }
+
+      function classifyTrafego(trafego) {
+        const t = String(trafego || "").toUpperCase();
+        if (/AUTORIZ|LIBERAD|PERMIT|HABILIT|OK|ATIVO|V[AÁ]LID/.test(t)) {
+          return { cls: "badge-ok", label: trafego };
+        }
+        if (/NEGAD|SUSPENS|IMPED|CANCEL|BLOQUE|VENCID|INATIV/.test(t)) {
+          return { cls: "badge-deny", label: trafego };
+        }
+        if (/PENDEN|ANALIS|AGUARD/.test(t)) {
+          return { cls: "badge-warn", label: trafego };
+        }
+        return { cls: "badge-neutral", label: trafego || "—" };
+      }
+
+      function kvItem(label, value, options) {
+        const opts = options || {};
+        return (
+          '<div class="kv' +
+          (opts.span2 ? " span-2" : "") +
+          '"><span class="k">' +
+          escapeHtml(label) +
+          '</span><span class="v' +
+          (opts.highlight ? " highlight" : "") +
+          '">' +
+          escapeHtml(displayValue(value)) +
+          "</span></div>"
+        );
+      }
+
+      function syncJsonToggleLabel() {
+        const label = jsonPanelEl.open ? "Ocultar JSON" : "Ver JSON";
+        jsonToggleLabelEl.textContent = label;
+        btnToggleJson.textContent = label;
+      }
+
+      function toggleJsonView() {
+        syncJsonToggleLabel();
+      }
+
+      function renderResultados(data) {
+        lastData = data;
+        lastJson = JSON.stringify(data, null, 2);
+        jsonEl.innerHTML = "<code>" + syntaxHighlight(lastJson) + "</code>";
+        jsonPanelEl.open = false;
+        syncJsonToggleLabel();
+        btnCopy.textContent = "Copiar JSON";
+
+        emptyStateEl.classList.remove("visible");
+        successNoticeEl.classList.remove("visible");
+        resultEl.classList.remove("visible");
+        emptyStateEl.innerHTML = "";
+        successNoticeEl.innerHTML = "";
+
+        if (!data || !data.sucesso) {
+          const msg =
+            (data && data.mensagem) ||
+            "Não localizamos habilitação TRIC para a placa informada na base da ANTT.";
+          emptyStateEl.innerHTML =
+            "<strong>Placa não encontrada</strong>" + escapeHtml(msg);
+          emptyStateEl.classList.add("visible");
+          setStatus(msg, "error");
+          return;
+        }
+
+        const v = data.dados_veiculo || {};
+        const e = data.dados_empresa || {};
+        const licencas = Array.isArray(data.situacao_licencas) ? data.situacao_licencas : [];
+        const placa = displayValue(v.placa || placaInput.value);
+
+        let licensesHtml = "";
+        if (licencas.length === 0) {
+          licensesHtml =
+            '<p class="muted-text">Nenhuma licença retornada para este veículo.</p>';
+        } else {
+          licensesHtml =
+            '<table class="licenses-table"><thead><tr><th>De / Para</th><th>Tráfego</th></tr></thead><tbody>' +
+            licencas
+              .map((item) => {
+                const badge = classifyTrafego(item.trafego);
+                return (
+                  "<tr><td>" +
+                  escapeHtml(displayValue(item.de_para)) +
+                  '</td><td><span class="badge ' +
+                  badge.cls +
+                  '">' +
+                  escapeHtml(displayValue(badge.label)) +
+                  "</span></td></tr>"
+                );
+              })
+              .join("") +
+            "</tbody></table>";
+        }
+
+        dashboardEl.innerHTML =
+          '<section class="card">' +
+          '<div class="card-head"><h2>Dados do Veículo</h2></div>' +
+          '<div class="kv-grid">' +
+          kvItem("Matrícula / Placa", placa, { highlight: true }) +
+          kvItem("Tipo", v.tipo) +
+          kvItem("Modelo", v.modelo) +
+          kvItem("Marca", v.marca) +
+          kvItem("Ano", v.ano) +
+          kvItem("Eixos", v.eixos) +
+          kvItem("Chassi / Motor", v.chassi_motor, { span2: true }) +
+          kvItem("CCU", v.ccu) +
+          "</div></section>" +
+          '<section class="card">' +
+          '<div class="card-head"><h2>Dados da Empresa Transportadora</h2></div>' +
+          '<div class="kv-grid">' +
+          kvItem("Razão Social", e.razao_social, { span2: true }) +
+          kvItem("Nome Fantasia", e.nome_fantasia, { span2: true }) +
+          kvItem("Endereço", e.endereco, { span2: true }) +
+          kvItem("Bairro", e.bairro) +
+          kvItem("Cidade", e.cidade) +
+          kvItem("País de Origem", e.pais_origem, { span2: true }) +
+          "</div></section>" +
+          '<section class="card">' +
+          '<div class="card-head"><h2>Situação das Licenças</h2></div>' +
+          licensesHtml +
+          "</section>";
+
+        successNoticeEl.innerHTML =
+          "<strong>Consulta concluída</strong>Dados do veículo " +
+          escapeHtml(placa) +
+          " carregados com sucesso.";
+        successNoticeEl.classList.add("visible");
+        resultEl.classList.add("visible");
+        setStatus("Consulta concluída com sucesso.", "ok");
+      }
+
+      async function copiarJson() {
+        if (!lastJson) return;
+        try {
+          await navigator.clipboard.writeText(lastJson);
+          btnCopy.textContent = "Copiado!";
+          setTimeout(() => {
+            btnCopy.textContent = "Copiar JSON";
+          }, 1600);
+        } catch {
+          btnCopy.textContent = "Falha ao copiar";
+          setTimeout(() => {
+            btnCopy.textContent = "Copiar JSON";
+          }, 1600);
+        }
+      }
+
+      function formatDateTime(date) {
+        return date.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function gerarPdf() {
+        if (!lastData || !lastData.sucesso) {
+          setStatus("Não há relatório disponível para exportar.", "error");
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const v = lastData.dados_veiculo || {};
+        const e = lastData.dados_empresa || {};
+        const licencas = Array.isArray(lastData.situacao_licencas) ? lastData.situacao_licencas : [];
+        const placa = String(v.placa || placaInput.value || "SEM-PLACA").toUpperCase();
+        const emittedAt = formatDateTime(new Date());
+
+        doc.setFillColor(74, 124, 140);
+        doc.rect(0, 0, 210, 28, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text("ANTT - TRIC: Consulta de Habilitação de Veículo", 14, 12);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Emissão: " + emittedAt, 14, 19);
+        doc.text("Placa consultada: " + placa, 14, 24);
+
+        doc.setTextColor(19, 50, 75);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("1. Dados do Veículo", 14, 38);
+
+        doc.autoTable({
+          startY: 42,
+          theme: "grid",
+          headStyles: { fillColor: [74, 124, 140], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 2.5, textColor: [36, 75, 103] },
+          columnStyles: { 0: { cellWidth: 45, fontStyle: "bold", fillColor: [234, 240, 245] } },
+          body: [
+            ["Placa", placa],
+            ["Tipo", displayValue(v.tipo)],
+            ["Modelo", displayValue(v.modelo)],
+            ["Marca", displayValue(v.marca)],
+            ["Ano", displayValue(v.ano)],
+            ["Eixos", displayValue(v.eixos)],
+            ["Chassi / Motor", displayValue(v.chassi_motor)],
+            ["CCU", displayValue(v.ccu)],
+          ],
+        });
+
+        let y = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("2. Dados da Empresa", 14, y);
+
+        doc.autoTable({
+          startY: y + 4,
+          theme: "grid",
+          headStyles: { fillColor: [74, 124, 140], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 2.5, textColor: [36, 75, 103] },
+          columnStyles: { 0: { cellWidth: 45, fontStyle: "bold", fillColor: [234, 240, 245] } },
+          body: [
+            ["Razão Social", displayValue(e.razao_social)],
+            ["Nome Fantasia", displayValue(e.nome_fantasia)],
+            ["Endereço", displayValue(e.endereco)],
+            ["Bairro", displayValue(e.bairro)],
+            ["Cidade", displayValue(e.cidade)],
+            ["País de Origem", displayValue(e.pais_origem)],
+          ],
+        });
+
+        y = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("3. Situação das Licenças", 14, y);
+
+        const licenseRows =
+          licencas.length > 0
+            ? licencas.map((item) => [displayValue(item.de_para), displayValue(item.trafego)])
+            : [["—", "Nenhuma licença retornada"]];
+
+        doc.autoTable({
+          startY: y + 4,
+          theme: "grid",
+          head: [["De / Para", "Tráfego"]],
+          headStyles: { fillColor: [19, 50, 75], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 2.5, textColor: [36, 75, 103] },
+          body: licenseRows,
+        });
+
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(90, 110, 127);
+          doc.text(
+            "Documento gerado a partir da consulta pública ANTT/TRIC · Página " +
+              i +
+              "/" +
+              pageCount,
+            14,
+            287
+          );
+        }
+
+        doc.save("relatorio-tric-" + placa + ".pdf");
+      }
+
+      function resetConsulta() {
+        resultEl.classList.remove("visible");
+        emptyStateEl.classList.remove("visible");
+        successNoticeEl.classList.remove("visible");
+        emptyStateEl.innerHTML = "";
+        successNoticeEl.innerHTML = "";
+        dashboardEl.innerHTML = "";
+        lastData = null;
+        lastJson = "";
+        jsonPanelEl.open = false;
+        syncJsonToggleLabel();
+        setStatus("");
+        placaInput.value = "";
+        placaInput.focus();
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const placa = placaInput.value.trim();
+        if (!placa) return;
+
+        submitBtn.disabled = true;
+        resultEl.classList.remove("visible");
+        emptyStateEl.classList.remove("visible");
+        successNoticeEl.classList.remove("visible");
+        dashboardEl.innerHTML = "";
+        lastData = null;
+        lastJson = "";
+        setStatus("Consultando ANTT…");
+
+        try {
+          const response = await fetch("/api/consulta/" + encodeURIComponent(placa));
+          const data = await response.json();
+          renderResultados(data);
+        } catch (error) {
+          setStatus("Falha ao consultar a API local.", "error");
+          emptyStateEl.innerHTML =
+            "<strong>Falha na consulta</strong>Não foi possível concluir a operação. Verifique se o servidor está em execução e tente novamente.";
+          emptyStateEl.classList.add("visible");
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      btnToggleJson.addEventListener("click", () => {
+        jsonPanelEl.open = !jsonPanelEl.open;
+        syncJsonToggleLabel();
+        if (jsonPanelEl.open) {
+          jsonPanelEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
+
+      jsonPanelEl.addEventListener("toggle", toggleJsonView);
+      btnPdf.addEventListener("click", gerarPdf);
+      btnCopy.addEventListener("click", copiarJson);
+      btnNovaConsulta.addEventListener("click", resetConsulta);
+
+      window.renderResultados = renderResultados;
+      window.toggleJsonView = toggleJsonView;
+      window.copiarJson = copiarJson;
+      window.gerarPdf = gerarPdf;
+    </script>
+  </body>
+</html>

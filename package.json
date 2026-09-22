@@ -1,0 +1,33 @@
+{
+  "name": "antt-tric-consulta",
+  "version": "1.0.0",
+  "description": "Consulta e parser de veículos habilitados no TRIC/ANTT",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "consulta": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "antt",
+    "tric",
+    "placa",
+    "veiculo"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "iconv-lite": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
