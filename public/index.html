@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
-      API_BASE_URL: URL do backend Express/API em produção (Amplify não corre Node).
-      Prioridade de resolução: window.__ANTT_TRIC_CONFIG__.apiBaseUrl (config.js)
-      → esta meta tag → localhost:3000 em ambiente local → origem relativa.
+      API_BASE_URL: vazio = mesmo domínio (Amplify rewrite /api → Lambda).
+      Prioridade: window.__ANTT_TRIC_CONFIG__.apiBaseUrl (config.js)
+      → esta meta tag → localhost:3000 se a UI estiver noutro porto → origem relativa.
     -->
     <meta name="api-base-url" content="" />
     <title>Consulta de Veículos - TRIC (ANTT)</title>
@@ -566,8 +566,9 @@
     <script>
       /**
        * Base URL da API.
-       * - Local (Express): "" → fetch relativo /api/...
-       * - Amplify / produção: definir em ./config.js ou na meta[name=api-base-url]
+       * - Amplify + rewrite /api → Lambda: "" (chamadas relativas no mesmo domínio)
+       * - Local (Express): "" na porta 3000
+       * - Fallback direto à Lambda: definir em ./config.js
        */
       const API_BASE_URL = (function resolveApiBaseUrl() {
         const fromConfig = window.__ANTT_TRIC_CONFIG__ && window.__ANTT_TRIC_CONFIG__.apiBaseUrl;
@@ -951,9 +952,9 @@
 
         try {
           const response = await fetch(apiUrl("/api/consulta/" + encodeURIComponent(placa)));
-          if (!response.ok && response.status === 404 && !API_BASE_URL) {
+          if (!response.ok && response.status === 404) {
             throw new Error(
-              "API indisponível neste host. No Amplify, defina apiBaseUrl em config.js apontando para o backend."
+              "API /api/consulta não encontrada. No Amplify, configure o Rewrite /api/<*> → Function URL da Lambda (ver README)."
             );
           }
           const data = await response.json();
@@ -962,7 +963,7 @@
           const detail =
             error && error.message
               ? error.message
-              : "Não foi possível concluir a operação. Verifique a API_BASE_URL / config.js e se o backend está acessível.";
+              : "Não foi possível concluir a operação. Verifique o rewrite Amplify→Lambda ou apiBaseUrl em config.js.";
           setStatus("Falha ao consultar a API.", "error");
           emptyStateEl.innerHTML =
             "<strong>Falha na consulta</strong>" + escapeHtml(detail);

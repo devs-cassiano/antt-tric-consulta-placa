@@ -7,6 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "build:static": "node -e \"const fs=require('fs'); if(!fs.existsSync('public/index.html')) process.exit(1); console.log('Static frontend ready in public/')\"",
+    "build:lambda": "esbuild src/lambda.ts --bundle --platform=node --target=node20 --outfile=dist-lambda/index.js --minify",
+    "package:lambda": "npm run build:lambda && mkdir -p dist-lambda && cd dist-lambda && zip -FS ../lambda.zip index.js",
     "start": "node dist/server.js",
     "consulta": "tsx src/cli.ts"
   },
@@ -25,9 +27,11 @@
     "iconv-lite": "^0.7.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
+    "esbuild": "^0.25.9",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }

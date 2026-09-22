@@ -1,15 +1,15 @@
 /**
- * Configuração do frontend (AWS Amplify / produção).
+ * Configuração do frontend (AWS Amplify + Lambda).
  *
- * O Amplify Hosting serve apenas ficheiros estáticos — o Express não corre lá.
- * Defina aqui a URL base do backend (API Gateway, ECS, EC2, Railway, etc.).
+ * Por padrão `apiBaseUrl` fica vazio (`""`) para que as chamadas sejam relativas
+ * ao mesmo domínio (ex.: https://antt.peresminuanolog.com/api/consulta/...).
+ * No Amplify, configure um Rewrite 200 de `/api/<*>` para a Function URL da Lambda.
  *
- * Exemplos:
- *   apiBaseUrl: "https://api.exemplo.com"
- *   apiBaseUrl: "https://xxxx.execute-api.us-east-1.amazonaws.com/prod"
+ * Alternativa (sem rewrite): informe a URL completa da Lambda/API Gateway:
+ *   apiBaseUrl: "https://xxxxxxxx.lambda-url.us-east-1.on.aws"
  *
- * Em desenvolvimento local com `npm run dev` (Express na porta 3000),
- * deixe vazio para usar o mesmo origem (caminhos relativos /api/...).
+ * Desenvolvimento local com Express (`npm run dev` na porta 3000):
+ *   deixe vazio — o mesmo origin atende /api/...
  */
 window.__ANTT_TRIC_CONFIG__ = {
   apiBaseUrl: "",

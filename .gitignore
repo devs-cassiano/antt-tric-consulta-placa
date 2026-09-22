@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-lambda/
+lambda.zip
 .env
 *.log
 .DS_Store
