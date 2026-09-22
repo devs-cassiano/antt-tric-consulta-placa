@@ -216,8 +216,8 @@
       }
 
       .status {
-        margin-top: 0.9rem;
-        min-height: 1.25rem;
+        margin-top: 0.55rem;
+        min-height: 1.15rem;
         font-size: 0.875rem;
         color: var(--muted);
       }
@@ -228,6 +228,10 @@
 
       .status.error {
         color: var(--danger);
+      }
+
+      .status:empty {
+        display: none;
       }
 
       .notice {
@@ -249,16 +253,82 @@
         border: 1px solid rgba(46, 107, 77, 0.18);
       }
 
-      .notice-error {
-        background: var(--bg-danger);
-        color: var(--danger);
-        border: 1px solid rgba(155, 44, 44, 0.15);
-      }
-
       .notice strong {
         display: block;
         margin-bottom: 0.2rem;
         font-weight: 700;
+      }
+
+      .not-found-card {
+        display: none;
+        margin-top: 1rem;
+        background: var(--bg-card);
+        border: 1px solid rgba(155, 44, 44, 0.18);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow);
+        padding: 1.5rem 1.35rem 1.35rem;
+        text-align: center;
+      }
+
+      .not-found-card.visible {
+        display: block;
+      }
+
+      .not-found-card .icon-wrap {
+        width: 2.75rem;
+        height: 2.75rem;
+        margin: 0 auto 0.85rem;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-danger);
+        color: var(--danger);
+      }
+
+      .not-found-card h2 {
+        margin: 0 0 0.4rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--danger);
+      }
+
+      .not-found-card .placa-destaque {
+        margin: 0.35rem 0 0.75rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--title);
+        letter-spacing: 0.06em;
+      }
+
+      .not-found-card p {
+        margin: 0 auto 1.15rem;
+        max-width: 34rem;
+        color: var(--text);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .not-found-card .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.55rem;
+      }
+
+      .btn-outline {
+        background: #fff;
+        color: var(--danger);
+        border: 1px solid rgba(155, 44, 44, 0.35);
+      }
+
+      .btn-outline:hover:not(:disabled) {
+        background: var(--bg-danger);
+      }
+
+      .btn-outline:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
 
       .results {
@@ -495,6 +565,10 @@
         .actions-panel .btn {
           flex: 1 1 auto;
         }
+
+        .not-found-card .actions .btn {
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -529,8 +603,47 @@
           <button id="submit" class="btn btn-primary" type="submit">Consultar Veículo</button>
         </form>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <div id="emptyState" class="notice notice-error"></div>
         <div id="successNotice" class="notice notice-success"></div>
+      </section>
+
+      <section id="emptyState" class="not-found-card" aria-live="polite">
+        <div class="icon-wrap" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h2>Placa não encontrada</h2>
+        <p id="emptyPlaca" class="placa-destaque"></p>
+        <p id="emptyMessage">
+          Não localizamos habilitação TRIC para a placa informada na base da ANTT.
+        </p>
+        <div class="actions">
+          <button type="button" class="btn btn-outline" id="btnComprovante" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M14 2v6h6M12 18v-6m0 6l-3-3m3 3l3-3"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Baixar Comprovante em PDF
+          </button>
+        </div>
       </section>
 
       <div id="result" class="results">
@@ -604,6 +717,8 @@
       const statusEl = document.getElementById("status");
       const resultEl = document.getElementById("result");
       const emptyStateEl = document.getElementById("emptyState");
+      const emptyPlacaEl = document.getElementById("emptyPlaca");
+      const emptyMessageEl = document.getElementById("emptyMessage");
       const successNoticeEl = document.getElementById("successNotice");
       const dashboardEl = document.getElementById("dashboard");
       const jsonEl = document.getElementById("json");
@@ -613,18 +728,53 @@
       const btnToggleJson = document.getElementById("btnToggleJson");
       const btnNovaConsulta = document.getElementById("btnNovaConsulta");
       const btnPdf = document.getElementById("btnPdf");
+      const btnComprovante = document.getElementById("btnComprovante");
 
       let lastData = null;
       let lastJson = "";
-
-      placaInput.addEventListener("input", () => {
-        placaInput.value = placaInput.value.replace(/[^a-zA-Z0-9.]/g, "").toUpperCase();
-      });
+      let lastNotFound = null;
 
       function setStatus(message, type) {
         statusEl.textContent = message || "";
         statusEl.className = "status" + (type ? " " + type : "");
       }
+
+      function clearLocalStatus() {
+        setStatus("");
+      }
+
+      function hideNegativeResult() {
+        emptyStateEl.classList.remove("visible");
+        btnComprovante.disabled = true;
+        lastNotFound = null;
+      }
+
+      function isNaoCadastradoMessage(mensagem) {
+        return /n[aã]o cadastrado|n[aã]o localiz|sem registro|placa n[aã]o encontrada/i.test(
+          String(mensagem || "")
+        );
+      }
+
+      function validatePlacaLocal(placa) {
+        if (!placa) {
+          return "Informe a placa do veículo.";
+        }
+        if (placa.length < 5 || placa.length > 9) {
+          return "Digite uma placa válida com 7 caracteres.";
+        }
+        if (!/^[A-Z0-9.]+$/i.test(placa)) {
+          return "Digite uma placa válida com 7 caracteres.";
+        }
+        return "";
+      }
+
+      placaInput.addEventListener("input", () => {
+        placaInput.value = placaInput.value.replace(/[^a-zA-Z0-9.]/g, "").toUpperCase();
+        clearLocalStatus();
+        hideNegativeResult();
+        successNoticeEl.classList.remove("visible");
+        successNoticeEl.innerHTML = "";
+      });
 
       function escapeHtml(text) {
         return String(text ?? "")
@@ -704,20 +854,35 @@
         syncJsonToggleLabel();
         btnCopy.textContent = "Copiar JSON";
 
-        emptyStateEl.classList.remove("visible");
+        hideNegativeResult();
         successNoticeEl.classList.remove("visible");
         resultEl.classList.remove("visible");
-        emptyStateEl.innerHTML = "";
         successNoticeEl.innerHTML = "";
+        clearLocalStatus();
 
         if (!data || !data.sucesso) {
           const msg =
             (data && data.mensagem) ||
             "Não localizamos habilitação TRIC para a placa informada na base da ANTT.";
-          emptyStateEl.innerHTML =
-            "<strong>Placa não encontrada</strong>" + escapeHtml(msg);
+          const placa =
+            (data && data.dados_veiculo && data.dados_veiculo.placa) ||
+            placaInput.value.trim().toUpperCase() ||
+            "—";
+          const consultedAt = new Date();
+
+          emptyPlacaEl.textContent = placa;
+          emptyMessageEl.textContent = msg;
           emptyStateEl.classList.add("visible");
-          setStatus(msg, "error");
+
+          if (isNaoCadastradoMessage(msg)) {
+            lastNotFound = { placa, consultedAt, mensagem: msg };
+            btnComprovante.disabled = false;
+          } else {
+            btnComprovante.disabled = true;
+            lastNotFound = null;
+          }
+
+          // Não duplicar a mensagem sob o input — apenas o card principal
           return;
         }
 
@@ -784,7 +949,6 @@
           " carregados com sucesso.";
         successNoticeEl.classList.add("visible");
         resultEl.classList.add("visible");
-        setStatus("Consulta concluída com sucesso.", "ok");
       }
 
       async function copiarJson() {
@@ -814,9 +978,110 @@
         });
       }
 
+      function formatConsultaDateTime(date) {
+        const dia = date.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const hora = date.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return dia + " às " + hora;
+      }
+
+      function gerarComprovanteNaoLocalizadoPdf() {
+        if (!lastNotFound) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const placa = String(lastNotFound.placa || "SEM-PLACA").toUpperCase();
+        const consultedAt = formatConsultaDateTime(
+          lastNotFound.consultedAt instanceof Date
+            ? lastNotFound.consultedAt
+            : new Date(lastNotFound.consultedAt)
+        );
+
+        // Título do documento → nome sugerido ao salvar/imprimir
+        doc.setProperties({
+          title: "comprovante-antt-nao-localizado-" + placa,
+          subject: "Comprovante de consulta TRIC/ANTT — veículo não cadastrado",
+          creator: "ANTT TRIC Consulta",
+        });
+
+        doc.setFillColor(74, 124, 140);
+        doc.rect(0, 0, 210, 32, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("Consulta de Habilitação TRIC - ANTT", 105, 13, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("Transporte Rodoviário Internacional de Cargas", 105, 21, { align: "center" });
+
+        doc.setTextColor(19, 50, 75);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Dados da pesquisa", 14, 44);
+
+        doc.setDrawColor(210, 220, 228);
+        doc.setFillColor(244, 247, 249);
+        doc.roundedRect(14, 48, 182, 28, 2, 2, "FD");
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(90, 110, 127);
+        doc.text("Placa / Matrícula Consultada", 20, 58);
+        doc.setTextColor(19, 50, 75);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(placa, 20, 66);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(90, 110, 127);
+        doc.text("Data e Hora da Consulta", 110, 58);
+        doc.setTextColor(19, 50, 75);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text(consultedAt, 110, 66);
+
+        doc.setFillColor(253, 236, 238);
+        doc.setDrawColor(155, 44, 44);
+        doc.roundedRect(14, 86, 182, 52, 2, 2, "FD");
+
+        doc.setTextColor(155, 44, 44);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("PARECER: VEÍCULO NÃO CADASTRADO", 20, 96);
+
+        doc.setTextColor(36, 75, 103);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        const parecer =
+          "Certificamos que, na data e hora especificadas, não foram localizados registros ativos de habilitação para este veículo junto à base de dados pública da ANTT para o Transporte Rodoviário Internacional de Cargas (TRIC).";
+        const parecerLines = doc.splitTextToSize(parecer, 170);
+        doc.text(parecerLines, 20, 106);
+
+        doc.setDrawColor(210, 220, 228);
+        doc.line(14, 250, 196, 250);
+        doc.setFontSize(8);
+        doc.setTextColor(90, 110, 127);
+        doc.text(
+          "Origem da consulta: Portal SCFF / ANTT - Sistema de Controle de Frotas e Faixas",
+          14,
+          258
+        );
+        doc.text("Documento gerado automaticamente a partir de consulta pública · " + consultedAt, 14, 264);
+
+        doc.save("comprovante-antt-nao-localizado-" + placa + ".pdf");
+      }
+
       function gerarPdf() {
         if (!lastData || !lastData.sucesso) {
-          setStatus("Não há relatório disponível para exportar.", "error");
           return;
         }
 
@@ -922,16 +1187,15 @@
 
       function resetConsulta() {
         resultEl.classList.remove("visible");
-        emptyStateEl.classList.remove("visible");
+        hideNegativeResult();
         successNoticeEl.classList.remove("visible");
-        emptyStateEl.innerHTML = "";
         successNoticeEl.innerHTML = "";
         dashboardEl.innerHTML = "";
         lastData = null;
         lastJson = "";
         jsonPanelEl.open = false;
         syncJsonToggleLabel();
-        setStatus("");
+        clearLocalStatus();
         placaInput.value = "";
         placaInput.focus();
       }
@@ -939,16 +1203,22 @@
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const placa = placaInput.value.trim();
-        if (!placa) return;
+
+        const localError = validatePlacaLocal(placa);
+        if (localError) {
+          setStatus(localError, "error");
+          hideNegativeResult();
+          return;
+        }
 
         submitBtn.disabled = true;
         resultEl.classList.remove("visible");
-        emptyStateEl.classList.remove("visible");
+        hideNegativeResult();
         successNoticeEl.classList.remove("visible");
         dashboardEl.innerHTML = "";
         lastData = null;
         lastJson = "";
-        setStatus("Consultando ANTT…");
+        clearLocalStatus();
 
         try {
           const response = await fetch(apiUrl("/api/consulta/" + encodeURIComponent(placa)));
@@ -958,16 +1228,19 @@
             );
           }
           const data = await response.json();
+          clearLocalStatus();
           renderResultados(data);
         } catch (error) {
           const detail =
             error && error.message
               ? error.message
               : "Não foi possível concluir a operação. Verifique o rewrite Amplify→Lambda ou apiBaseUrl em config.js.";
-          setStatus("Falha ao consultar a API.", "error");
-          emptyStateEl.innerHTML =
-            "<strong>Falha na consulta</strong>" + escapeHtml(detail);
+          clearLocalStatus();
+          emptyPlacaEl.textContent = placa.toUpperCase();
+          emptyMessageEl.textContent = detail;
           emptyStateEl.classList.add("visible");
+          btnComprovante.disabled = true;
+          lastNotFound = null;
         } finally {
           submitBtn.disabled = false;
         }
@@ -983,6 +1256,7 @@
 
       jsonPanelEl.addEventListener("toggle", toggleJsonView);
       btnPdf.addEventListener("click", gerarPdf);
+      btnComprovante.addEventListener("click", gerarComprovanteNaoLocalizadoPdf);
       btnCopy.addEventListener("click", copiarJson);
       btnNovaConsulta.addEventListener("click", resetConsulta);
 
@@ -990,6 +1264,7 @@
       window.toggleJsonView = toggleJsonView;
       window.copiarJson = copiarJson;
       window.gerarPdf = gerarPdf;
+      window.gerarComprovanteNaoLocalizadoPdf = gerarComprovanteNaoLocalizadoPdf;
     </script>
   </body>
 </html>
